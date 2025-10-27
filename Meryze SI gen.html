@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Maker - Meryze Industrial Sales</title>
+    <!-- Load Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
+    <!-- Configure Tailwind to use Inter font --><script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        inter: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        meryzeYellow: {
+                            50: '#FFFBEB',   /* Lightest for body bg */
+                            100: '#FEF3C7',  /* For invoice header bg */
+                            200: '#FDE68A',
+                            300: '#FCD34D',
+                        },
+                        meryzeGreen: {
+                            50: '#ECFDF5',
+                            100: '#D1FAE5',
+                            800: '#065F46', /* Dark green for main text */
+                            900: '#047857', /* Darker green for accents */
+                        },
+                    },
+                },
+            },
+        };
+    </script>
+    <!-- Add simple print styles --><style>
+        @media print {
+            /* Hide everything except the invoice preview area */
+            body * {
+                visibility: hidden;
+            }
+            /* Explicitly hide the form and app header */
+            #invoice-form, header.mb-8 {
+                visibility: hidden !important;
+                display: none !important;
+            }
+            #invoice-print-area, #invoice-print-area * {
+                visibility: visible;
+            }
+            /* Position the invoice at the top left of the print page */
+            #invoice-print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                padding: 0;
+                border: none !important; /* Remove border for print if not desired */
+                box-shadow: none !important;
+            }
+            /* Remove shadows and borders for print */
+            .print-no-shadow {
+                box-shadow: none !important;
+                border: none !important;
+            }
+            /* Ensure text is black for print, or specific green */
+            .print-text-black * {
+                color: #000 !important; /* Or if you want green on print: var(--tw-meryzeGreen-800) !important; */
+            }
+            .print-bg-transparent {
+                background-color: transparent !important;
+            }
+            /* Ensure header background prints correctly */
+            #invoice-preview-header {
+                 -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                background-color: var(--tw-meryzeYellow-100) !important;
+            }
+        }
+        /* Custom styles for the app */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Style for the form inputs */
+        .form-input {
+            @apply mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-meryzeGreen-900 focus:ring-meryzeGreen-900 sm:text-sm;
+        }
+        .form-label {
+            @apply block text-sm font-medium text-meryzeGreen-800;
+        }
+    </style>
+</head>
+<body class="bg-meryzeYellow-50 p-4 sm:p-8 text-meryzeGreen-800">
+
+    <div class="max-w-7xl mx-auto">
+        <header class="mb-8">
+            <h1 class="text-4xl font-bold text-meryzeGreen-900">Meryze Industrial Sales Corporation</h1>
+            <p class="text-lg text-meryzeGreen-800">Invoice Generation Tool</p>
+        </header>
+
+        <!-- Main Grid: Form on Left, Preview on Right --><div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+            <!-- ====================================== --><!-- LEFT COLUMN: INPUT FORM --><!-- ====================================== --><form id="invoice-form" class="space-y-6 bg-white p-6 rounded-lg shadow-md">
+
+                <!-- Branch Selection --><section>
+                    <h2 class="text-xl font-semibold text-meryzeGreen-900 border-b pb-2 mb-4">Company Details</h2>
+                    <div>
+                        <label for="branch-select" class="form-label">Select Branch</label>
+                        <select id="branch-select" class="form-input">
+                            <option value="paranaque">BF Homes, Paranaque City</option>
+                            <option value="davao">Davao City</option>
+                        </select>
+                    </div>
+                    <div class="mt-4">
+                        <label class="form-label">Company Address</label>
+                        <p id="company-address-display" class="text-sm text-gray-700"></p>
+                    </div>
+                     <div class="mt-2">
+                        <label class="form-label">TIN #</label>
+                        <p id="company-tin-display" class="text-sm text-gray-700"></p>
+                    </div>
+                </section>
+
+                <!-- Section: Client Details --><section>
+                    <h2 class="text-xl font-semibold text-meryzeGreen-900 border-b pb-2 mb-4">Bill To</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="client-name" class="form-label">Client Name</label>
+                            <input type="text" id="client-name" class="form-input" placeholder="e.g. Acme Construction Inc.">
+                        </div>
+                        <div>
+                            <label for="client-email" class="form-label">Client Email</label>
+                            <input type="email" id="client-email" class="form-input" placeholder="e.g. purchasing@acme.com">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label for="client-address" class="form-label">Client Address</label>
+                            <textarea id="client-address" rows="3" class="form-input" placeholder="e.g. 123 Main St, Quezon City, Metro Manila"></textarea>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section: Invoice Details --><section>
+                    <h2 class="text-xl font-semibold text-meryzeGreen-900 border-b pb-2 mb-4">Invoice Details</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label for="invoice-number" class="form-label">Invoice #</label>
+                            <input type="text" id="invoice-number" class="form-input" placeholder="INV-001">
+                        </div>
+                        <div>
+                            <label for="invoice-date" class="form-label">Date of Issue</label>
+                            <input type="date" id="invoice-date" class="form-input">
+                        </div>
+                        <div>
+                            <label for="invoice-due-date" class="form-label">Due Date</label>
+                            <input type="date" id="invoice-due-date" class="form-input">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section: Line Items --><section>
+                    <h2 class="text-xl font-semibold text-meryzeGreen-900 border-b pb-2 mb-4">Items</h2>
+                    <div id="line-items-container" class="space-y-4">
+                        <!-- Header Row (visible on md screens) --><div class="hidden sm:grid grid-cols-12 gap-x-4">
+                            <div class="col-span-5"><label class="form-label">Description</label></div>
+                            <div class="col-span-2"><label class="form-label">Qty</label></div>
+                            <div class="col-span-3"><label class="form-label">Unit Price</label></div>
+                            <div class="col-span-2"><label class="form-label">Total</label></div>
+                        </div>
+                        <!-- JS-generated item rows will be appended here --></div>
+                    <button type="button" id="add-item-btn" class="mt-4 px-4 py-2 bg-meryzeGreen-900 text-white text-sm font-medium rounded-md shadow-sm hover:bg-meryzeGreen-800 focus:outline-none focus:ring-2 focus:ring-meryzeGreen-900 focus:ring-offset-2">
+                        + Add Item
+                    </button>
+                </section>
+
+                <!-- Section: Totals & Notes --><section class="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                    <!-- Notes --><div>
+                        <label for="notes" class="form-label">Notes / Payment Instructions</label>
+                        <textarea id="notes" rows="4" class="form-input" placeholder="e.g. Please make payment to BDO Account..."></textarea>
+                    </div>
+                    
+                    <!-- Totals --><div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="form-label">Subtotal</span>
+                            <span id="subtotal-display" class="font-semibold text-meryzeGreen-800">₱0.00</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <label for="tax-rate" class="form-label">Tax Rate (%)</label>
+                            <input type="number" id="tax-rate" class="form-input w-24 text-right" value="12" min="0">
+                        </div>
+                         <div class="flex justify-between items-center">
+                            <span class="form-label">Tax Amount</span>
+                            <span id="tax-display" class="font-semibold text-meryzeGreen-800">₱0.00</span>
+                        </div>
+                        <hr class="my-2 border-gray-300">
+                        <div class="flex justify-between items-center">
+                            <span class="text-lg font-bold text-meryzeGreen-900">Total</span>
+                            <span id="total-display" class="text-lg font-bold text-meryzeGreen-900">₱0.00</span>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Section: Action Button --><section class="pt-6 border-t border-gray-200">
+                    <button type="button" id="print-btn" class="w-full px-6 py-3 bg-meryzeGreen-900 text-white text-lg font-medium rounded-md shadow-sm hover:bg-meryzeGreen-800 focus:outline-none focus:ring-2 focus:ring-meryzeGreen-900 focus:ring-offset-2 flex items-center justify-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        </svg>
+                        Print / Download as PDF
+                    </button>
+                </section>
+            </form>
+
+            <!-- ====================================== --><!-- RIGHT COLUMN: INVOICE PREVIEW --><!-- ====================================== --><div class="bg-white rounded-lg shadow-xl print-no-shadow print-text-black border-4 border-meryzeGreen-900" id="invoice-print-area">
+                <div class="p-8 sm:p-12">
+                    <!-- Preview Header --><header id="invoice-preview-header" class="flex justify-between items-start pb-8 border-b border-meryzeGreen-900 bg-meryzeYellow-100 -mx-8 -mt-8 px-8 pt-8 rounded-t-md">
+                        <div class="flex items-start gap-4">
+                            <!-- Company Logo --><img src="https://i.ibb.co/3k5f1Sj/Image-3.png" alt="Meryze Industrial Sales Co. Logo" class="w-16 h-16 object-contain">
+                            <div>
+                                <h2 class="text-2xl font-bold text-meryzeGreen-900">Meryze Industrial Sales Corporation</h2>
+                                <p id="preview-company-address" class="text-sm text-meryzeGreen-800 mt-1 whitespace-pre-line">
+                                    #34 VICTOR LIM ST. BF HOMES PARANAQUE CITY
+                                </p>
+                                <p id="preview-company-tin" class="text-sm text-meryzeGreen-800 mt-1">
+                                    TIN # 617-702-433-00000
+                                </p>
+                            </div>
+                        </div>
+                        <h1 class="text-4xl font-bold text-meryzeGreen-900 uppercase">Invoice</h1>
+                    </header>
+
+                    <!-- Preview Client/Meta Info --><section class="grid grid-cols-1 sm:grid-cols-2 gap-8 mt-8">
+                        <!-- Bill To --><div>
+                            <h3 class="text-sm font-semibold text-meryzeGreen-800 uppercase">Bill To</h3>
+                            <p id="preview-client-name" class="font-bold text-meryzeGreen-900 mt-1">
+                                [Client Name]
+                            </p>
+                            <p id="preview-client-address" class="text-sm text-meryzeGreen-800 whitespace-pre-line mt-1">
+                                [Client Address]
+                            </p>
+                            <p id="preview-client-email" class="text-sm text-meryzeGreen-800 mt-1">
+                                [Client Email]
+                            </p>
+                        </div>
+                        <!-- Invoice Details --><div class="sm:text-right">
+                            <div class="grid grid-cols-2 sm:grid-cols-1">
+                                <span class="text-sm font-semibold text-gray-500">Invoice #</span>
+                                <span id="preview-invoice-number" class="font-medium text-meryzeGreen-800 mb-2">[Invoice #]</span>
+                            </div>
+                             <div class="grid grid-cols-2 sm:grid-cols-1">
+                                <span class="text-sm font-semibold text-gray-500">Date of Issue</span>
+                                <span id="preview-invoice-date" class="font-medium text-meryzeGreen-800 mb-2">[Date]</span>
+                            </div>
+                             <div class="grid grid-cols-2 sm:grid-cols-1">
+                                <span class="text-sm font-semibold text-gray-500">Due Date</span>
+                                <span id="preview-invoice-due-date" class="font-medium text-meryzeGreen-800 mb-2">[Due Date]</span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Preview Items Table --><section class="mt-12">
+                        <table class="w-full text-left">
+                            <thead class="bg-meryzeYellow-50">
+                                <tr>
+                                    <th scope="col" class="py-3 px-4 text-xs font-semibold text-meryzeGreen-800 uppercase tracking-wider">Description</th>
+                                    <th scope="col" class="w-24 py-3 px-4 text-xs font-semibold text-meryzeGreen-800 uppercase tracking-wider text-right">Qty</th>
+                                    <th scope="col" class="w-32 py-3 px-4 text-xs font-semibold text-meryzeGreen-800 uppercase tracking-wider text-right">Unit Price</th>
+                                    <th scope="col" class="w-32 py-3 px-4 text-xs font-semibold text-meryzeGreen-900 uppercase tracking-wider text-right">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody id="preview-items-tbody" class="divide-y divide-gray-200">
+                                <!-- JS-generated preview rows --><tr><td colspan="4" class="py-4 px-4 text-sm text-gray-500 text-center">[Add items to see them here]</td></tr>
+                            </tbody>
+                        </table>
+                    </section>
+
+                    <!-- Preview Totals --><section class="mt-8 flex justify-end">
+                        <div class="w-full max-w-xs space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-sm font-medium text-meryzeGreen-800">Subtotal</span>
+                                <span id="preview-subtotal" class="text-sm font-medium text-meryzeGreen-900">₱0.00</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-sm font-medium text-meryzeGreen-800">Tax (<span id="preview-tax-rate">12</span>%)</span>
+                                <span id="preview-tax" class="text-sm font-medium text-meryzeGreen-900">₱0.00</span>
+                            </div>
+                            <hr class="border-gray-300">
+                            <div class="flex justify-between">
+                                <span class="text-lg font-bold text-meryzeGreen-900">Total</span>
+                                <span id="preview-total" class="text-lg font-bold text-meryzeGreen-900">₱0.00</span>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <!-- Preview Notes --><section class="mt-12 pt-8 border-t border-gray-200">
+                        <h3 class="text-sm font-semibold text-meryzeGreen-800 uppercase">Notes</h3>
+                        <p id="preview-notes" class="text-sm text-meryzeGreen-800 mt-2 whitespace-pre-line">
+                            [Your notes and payment instructions will appear here]
+                        </p>
+                    </section>
+
+                    <!-- Preview Footer --><footer class="text-center text-xs text-gray-400 mt-12">
+                        Thank you for your business!
+                    </footer>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('invoice-form');
+            const lineItemsContainer = document.getElementById('line-items-container');
+            const addItemBtn = document.getElementById('add-item-btn');
+            const printBtn = document.getElementById('print-btn');
+            const branchSelect = document.getElementById('branch-select');
+            
+            // Company Branch Data
+            const branches = {
+                paranaque: {
+                    address: '#34 VICTOR LIM ST. BF HOMES PARANAQUE CITY',
+                    tin: '617-702-433-00000',
+                    email: 'sales.paranaque@meryze.com.ph', // Example, adjust as needed
+                    phone: '(02) 8123-4567' // Example, adjust as needed
+                },
+                davao: {
+                    address: 'DOOR 1 LOPEZ JAENA ST. BRGY. 9-A POBLACION, DAVAO CITY',
+                    tin: '617-702-433-00001',
+                    email: 'sales.davao@meryze.com.ph', // Example, adjust as needed
+                    phone: '(082) 221-1234' // Example, adjust as needed
+                }
+            };
+
+            // --- FIELD MAPPING ---
+            // Maps form input IDs to preview element IDs
+            const fieldMap = {
+                'client-name': 'preview-client-name',
+                'client-email': 'preview-client-email',
+                'client-address': 'preview-client-address',
+                'invoice-number': 'preview-invoice-number',
+                'invoice-date': 'preview-invoice-date',
+                'invoice-due-date': 'preview-invoice-due-date',
+                'notes': 'preview-notes',
+                'tax-rate': 'preview-tax-rate',
+            };
+            
+            // --- CURRENCY FORMATTER ---
+            const formatCurrency = (amount) => {
+                return new Intl.NumberFormat('en-PH', {
+                    style: 'currency',
+                    currency: 'PHP'
+                }).format(amount);
+            };
+
+            // --- UPDATE PREVIEW ---
+            const updatePreview = () => {
+                // 1. Update simple text fields
+                for (const [formId, previewId] of Object.entries(fieldMap)) {
+                    const formElement = document.getElementById(formId);
+                    const previewElement = document.getElementById(previewId);
+                    if (formElement && previewElement) {
+                        previewElement.textContent = formElement.value || previewElement.dataset.placeholder || '';
+                        
+                        // Special handling for textareas to preserve line breaks
+                        if (formElement.tagName === 'TEXTAREA') {
+                            previewElement.innerHTML = formElement.value.replace(/\n/g, '<br>') || previewElement.dataset.placeholder || '';
+                        }
+                    }
+                }
+                
+                // 2. Calculate and update totals
+                calculateTotals();
+                
+                // 3. Update line items in preview
+                updatePreviewItems();
+            };
+
+            // --- CALCULATE TOTALS ---
+            const calculateTotals = () => {
+                let subtotal = 0;
+                const itemRows = lineItemsContainer.querySelectorAll('.item-row');
+                
+                itemRows.forEach(row => {
+                    const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
+                    const price = parseFloat(row.querySelector('.item-price').value) || 0;
+                    const rowTotal = qty * price;
+                    
+                    // Update the "Total" input in the form row (disabled)
+                    row.querySelector('.item-total').value = formatCurrency(rowTotal);
+                    subtotal += rowTotal;
+                });
+
+                const taxRate = parseFloat(document.getElementById('tax-rate').value) || 0;
+                const taxAmount = subtotal * (taxRate / 100);
+                const total = subtotal + taxAmount;
+
+                // Update form displays
+                document.getElementById('subtotal-display').textContent = formatCurrency(subtotal);
+                document.getElementById('tax-display').textContent = formatCurrency(taxAmount);
+                document.getElementById('total-display').textContent = formatCurrency(total);
+                
+                // Update preview displays
+                document.getElementById('preview-subtotal').textContent = formatCurrency(subtotal);
+                document.getElementById('preview-tax').textContent = formatCurrency(taxAmount);
+                document.getElementById('preview-total').textContent = formatCurrency(total);
+            };
+            
+            // --- UPDATE PREVIEW ITEMS TABLE ---
+            const updatePreviewItems = () => {
+                const previewTbody = document.getElementById('preview-items-tbody');
+                previewTbody.innerHTML = ''; // Clear existing items
+                
+                const itemRows = lineItemsContainer.querySelectorAll('.item-row');
+                
+                if (itemRows.length === 0) {
+                    previewTbody.innerHTML = '<tr><td colspan="4" class="py-4 px-4 text-sm text-gray-500 text-center">[Add items to see them here]</td></tr>';
+                    return;
+                }
+                
+                itemRows.forEach(row => {
+                    const description = row.querySelector('.item-desc').value || '[Item Description]';
+                    const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
+                    const price = parseFloat(row.querySelector('.item-price').value) || 0;
+                    const total = qty * price;
+                    
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="py-4 px-4 text-sm font-medium text-meryzeGreen-900">${description}</td>
+                        <td class="py-4 px-4 text-sm text-meryzeGreen-800 text-right">${qty}</td>
+                        <td class="py-4 px-4 text-sm text-meryzeGreen-800 text-right">${formatCurrency(price)}</td>
+                        <td class="py-4 px-4 text-sm font-medium text-meryzeGreen-900 text-right">${formatCurrency(total)}</td>
+                    `;
+                    previewTbody.appendChild(tr);
+                });
+            };
+
+            // --- ADD ITEM ROW ---
+            const addItemRow = () => {
+                const row = document.createElement('div');
+                row.className = 'item-row grid grid-cols-12 gap-x-4 gap-y-2 items-start';
+                row.innerHTML = `
+                    <!-- Description --><div class="col-span-12 sm:col-span-5">
+                        <label class="form-label sm:hidden">Description</label>
+                        <input type="text" class="form-input item-desc" placeholder="Item description">
+                    </div>
+                    <!-- Qty --><div class="col-span-4 sm:col-span-2">
+                        <label class="form-label sm:hidden">Qty</label>
+                        <input type="number" class="form-input item-qty" placeholder="1" min="0" value="1">
+                    </div>
+                    <!-- Unit Price --><div class="col-span-8 sm:col-span-3">
+                        <label class="form-label sm:hidden">Unit Price</label>
+                        <div class="relative rounded-md shadow-sm">
+                            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                <span class="text-gray-500 sm:text-sm">₱</span>
+                            </div>
+                            <input type="number" class="form-input item-price pl-7" placeholder="0.00" min="0" step="0.01">
+                        </div>
+                    </div>
+                    <!-- Total --><div class="col-span-8 sm:col-span-2">
+                         <label class="form-label sm:hidden">Total</label>
+                        <input type="text" class="form-input item-total bg-gray-100" placeholder="₱0.00" disabled>
+                    </div>
+                    <!-- Remove Button --><div class="col-span-4 sm:col-span-1 flex items-end sm:items-center h-full">
+                        <button type="button" class="remove-item-btn p-2 text-red-500 hover:text-red-700 w-full h-full sm:h-auto flex justify-end sm:justify-center items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                    </div>
+                    <!-- Mobile Divider --><div class="col-span-12 border-b sm:hidden"></div>
+                `;
+                lineItemsContainer.appendChild(row);
+            };
+
+            // --- REMOVE ITEM ROW ---
+            const removeItemRow = (e) => {
+                if (e.target.closest('.remove-item-btn')) {
+                    e.target.closest('.item-row').remove();
+                    updatePreview(); // Recalculate after removing
+                }
+            };
+            
+            // --- UPDATE COMPANY INFO BASED ON BRANCH SELECTION ---
+            const updateCompanyInfo = () => {
+                const selectedBranchKey = branchSelect.value;
+                const branchData = branches[selectedBranchKey];
+
+                if (branchData) {
+                    // Update form display
+                    document.getElementById('company-address-display').textContent = branchData.address;
+                    document.getElementById('company-tin-display').textContent = `TIN # ${branchData.tin}`;
+
+                    // Update invoice preview
+                    document.getElementById('preview-company-address').textContent = branchData.address;
+                    document.getElementById('preview-company-tin').textContent = `TIN # ${branchData.tin}`;
+                    // Assuming you might want to update email/phone too if they were in the header
+                    // For now, I've left the phone/email static in the HTML, but you could add elements and update them here.
+                    // E.g., document.getElementById('preview-company-email').textContent = branchData.email;
+                }
+            };
+
+            // --- HANDLE PRINT ---
+            const handlePrint = () => {
+                // The @media print CSS rules automatically handle hiding non-invoice elements.
+                // We just need to trigger the browser's print dialog.
+                window.print();
+            };
+
+            // --- INITIALIZE FUNCTION ---
+            // We wrap this in a function so we can call it again after printing
+            const initialize = () => {
+                // Set placeholder text
+                document.querySelectorAll('[data-placeholder]').forEach(el => {
+                   el.dataset.placeholder = el.textContent; 
+                });
+                
+                // Set default date
+                const today = new Date().toISOString().split('T')[0];
+                const dateInput = document.getElementById('invoice-date');
+                if (!dateInput.value) {
+                    dateInput.value = today;
+                }
+
+                // Add one item row to start
+                if (document.querySelectorAll('.item-row').length === 0) {
+                     addItemRow();
+                }
+
+                // Initial update of company info
+                updateCompanyInfo();
+                
+                // Initial update of preview (includes totals and items)
+                updatePreview();
+
+                // Add event listeners (ensure they are re-attached if body.innerHTML was reset)
+                form.removeEventListener('input', updatePreview); 
+                form.addEventListener('input', updatePreview);
+
+                branchSelect.removeEventListener('change', updateCompanyInfo);
+                branchSelect.addEventListener('change', updateCompanyInfo);
+                branchSelect.removeEventListener('change', updatePreview); // Also update overall preview when branch changes
+                branchSelect.addEventListener('change', updatePreview);
+
+                addItemBtn.removeEventListener('click', addItemRow);
+                addItemBtn.addEventListener('click', addItemRow);
+
+                lineItemsContainer.removeEventListener('click', removeItemRow);
+                lineItemsContainer.addEventListener('click', removeItemRow);
+
+                printBtn.removeEventListener('click', handlePrint);
+                printBtn.addEventListener('click', handlePrint);
+            };
+
+            // Run initialize on load
+            initialize();
+        });
+    </script>
+</body>
+</html>
+
+
