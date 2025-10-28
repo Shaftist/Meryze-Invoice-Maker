@@ -71,7 +71,7 @@
             #invoice-preview-header {
                  -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
-                background-color: var(--tw-meryzeYellow-100) !important;
+                background-color: var(--tw-meryzeYellow-300) !important; /* Updated to match new color */
             }
         }
         /* Custom styles for the app */
@@ -208,36 +208,43 @@
 
             <!-- ====================================== --><!-- RIGHT COLUMN: INVOICE PREVIEW --><!-- ====================================== --><div class="bg-white rounded-lg shadow-xl print-no-shadow print-text-black border-4 border-meryzeGreen-900" id="invoice-print-area">
                 <div class="p-8 sm:p-12">
-                    <!-- Preview Header --><header id="invoice-preview-header" class="flex justify-between items-start pb-8 border-b border-meryzeGreen-900 bg-meryzeYellow-100 -mx-8 -mt-8 px-8 pt-8 rounded-t-md">
-                        <div class="flex items-start gap-4">
-                            <!-- Company Logo --><img src="Images/Logo.png" alt="Meryze Industrial Sales Co. Logo" class="w-16 h-16 object-contain">
+                    <!-- Preview Header --><header id="invoice-preview-header" class="flex items-center gap-4 bg-meryzeYellow-300 -mx-8 -mt-8 px-6 py-4 rounded-t-md">
+                        <div class="flex items-center gap-4">
+                            <!-- Company Logo --><img src="https://i.ibb.co/3k5f1Sj/Image-3.png" alt="Meryze Industrial Sales Co. Logo" class="w-12 h-12 object-contain">
                             <div>
-                                <h2 class="text-2xl font-bold text-meryzeGreen-900">Meryze Industrial Sales Corporation</h2>
-                                <p id="preview-company-address" class="text-sm text-meryzeGreen-800 mt-1 whitespace-pre-line">
+                                <h2 class="text-2xl font-bold text-meryzeGreen-900 uppercase">Meryze Industrial Sales Co.</h2>
+                                <p id="preview-company-address" class="text-xs font-medium text-meryzeGreen-800 whitespace-pre-line">
                                     #34 VICTOR LIM ST. BF HOMES PARANAQUE CITY
                                 </p>
-                                <p id="preview-company-tin" class="text-sm text-meryzeGreen-800 mt-1">
+                                <p id="preview-company-tin" class="text-xs font-medium text-meryzeGreen-800 mt-1">
                                     TIN # 617-702-433-00000
                                 </p>
                             </div>
                         </div>
-                        <h1 class="text-4xl font-bold text-meryzeGreen-900 uppercase">Invoice</h1>
                     </header>
 
-                    <!-- Preview Client/Meta Info --><section class="grid grid-cols-1 sm:grid-cols-2 gap-8 mt-8">
-                        <!-- Bill To --><div>
-                            <h3 class="text-sm font-semibold text-meryzeGreen-800 uppercase">Bill To</h3>
-                            <p id="preview-client-name" class="font-bold text-meryzeGreen-900 mt-1">
-                                [Client Name]
-                            </p>
-                            <p id="preview-client-address" class="text-sm text-meryzeGreen-800 whitespace-pre-line mt-1">
-                                [Client Address]
-                            </p>
-                            <p id="preview-client-email" class="text-sm text-meryzeGreen-800 mt-1">
-                                [Client Email]
-                            </p>
+                    <!-- New Title & Invoice Details Section -->
+                    <div class="flex justify-between items-start mt-8">
+                        <div>
+                            <h1 class="text-4xl font-bold text-meryzeGreen-900 uppercase">Invoice</h1>
+                            
+                            <!-- Bill To (Moved under Invoice title) -->
+                            <div class="mt-8">
+                                <h3 class="text-sm font-semibold text-meryzeGreen-800 uppercase">Bill To</h3>
+                                <p id="preview-client-name" class="font-bold text-meryzeGreen-900 mt-1">
+                                    [Client Name]
+                                </p>
+                                <p id="preview-client-address" class="text-sm text-meryzeGreen-800 whitespace-pre-line mt-1">
+                                    [Client Address]
+                                </p>
+                                <p id="preview-client-email" class="text-sm text-meryzeGreen-800 mt-1">
+                                    [Client Email]
+                                </p>
+                            </div>
                         </div>
-                        <!-- Invoice Details --><div class="sm:text-right">
+
+                        <!-- Invoice Details (Moved to the right of Invoice title) -->
+                        <div class="sm:text-right">
                             <div class="grid grid-cols-2 sm:grid-cols-1">
                                 <span class="text-sm font-semibold text-gray-500">Invoice #</span>
                                 <span id="preview-invoice-number" class="font-medium text-meryzeGreen-800 mb-2">[Invoice #]</span>
@@ -251,7 +258,7 @@
                                 <span id="preview-invoice-due-date" class="font-medium text-meryzeGreen-800 mb-2">[Due Date]</span>
                             </div>
                         </div>
-                    </section>
+                    </div>
 
                     <!-- Preview Items Table --><section class="mt-12">
                         <table class="w-full text-left">
