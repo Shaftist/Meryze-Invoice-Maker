@@ -73,6 +73,14 @@
                 print-color-adjust: exact;
                 background-color: var(--tw-meryzeYellow-300) !important; /* Updated to match new color */
             }
+            /* Add borders to match BIR form */
+            .bir-border {
+                border: 1px solid #000;
+            }
+            .bir-border-t { border-top: 1px solid #000; }
+            .bir-border-b { border-bottom: 1px solid #000; }
+            .bir-border-l { border-left: 1px solid #000; }
+            .bir-border-r { border-right: 1px solid #000; }
         }
         /* Custom styles for the app */
         body {
@@ -122,15 +130,15 @@
                     <h2 class="text-xl font-semibold text-meryzeGreen-900 border-b pb-2 mb-4">Bill To</h2>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label for="client-name" class="form-label">Client Name</label>
+                            <label for="client-name" class="form-label">Registered Name</label>
                             <input type="text" id="client-name" class="form-input" placeholder="e.g. Acme Construction Inc.">
                         </div>
                         <div>
-                            <label for="client-email" class="form-label">Client Email</label>
-                            <input type="email" id="client-email" class="form-input" placeholder="e.g. purchasing@acme.com">
+                            <label for="client-tin" class="form-label">TIN</label>
+                            <input type="text" id="client-tin" class="form-input" placeholder="e.g. 123-456-789-000">
                         </div>
                         <div class="sm:col-span-2">
-                            <label for="client-address" class="form-label">Client Address</label>
+                            <label for="client-address" class="form-label">Business Address</label>
                             <textarea id="client-address" rows="3" class="form-input" placeholder="e.g. 123 Main St, Quezon City, Metro Manila"></textarea>
                         </div>
                     </div>
@@ -141,15 +149,24 @@
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
                             <label for="invoice-number" class="form-label">Invoice #</label>
-                            <input type="text" id="invoice-number" class="form-input" placeholder="INV-001">
+                            <input type="text" id="invoice-number" class="form-input" placeholder="5000001">
                         </div>
                         <div>
                             <label for="invoice-date" class="form-label">Date of Issue</label>
                             <input type="date" id="invoice-date" class="form-input">
                         </div>
-                        <div>
-                            <label for="invoice-due-date" class="form-label">Due Date</label>
-                            <input type="date" id="invoice-due-date" class="form-input">
+                        <div class="space-y-2">
+                            <label class="form-label">Sales Type</label>
+                            <div class="flex gap-4">
+                                <div class="flex items-center">
+                                    <input id="cash-sales" name="sales-type" type="radio" class="focus:ring-meryzeGreen-900 h-4 w-4 text-meryzeGreen-900 border-gray-300" value="cash">
+                                    <label for="cash-sales" class="ml-2 block text-sm text-gray-700">Cash Sales</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input id="charge-sales" name="sales-type" type="radio" class="focus:ring-meryzeGreen-900 h-4 w-4 text-meryzeGreen-900 border-gray-300" value="charge" checked>
+                                    <label for="charge-sales" class="ml-2 block text-sm text-gray-700">Charge Sales</label>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -158,9 +175,10 @@
                     <h2 class="text-xl font-semibold text-meryzeGreen-900 border-b pb-2 mb-4">Items</h2>
                     <div id="line-items-container" class="space-y-4">
                         <!-- Header Row (visible on md screens) --><div class="hidden sm:grid grid-cols-12 gap-x-4">
-                            <div class="col-span-5"><label class="form-label">Description</label></div>
-                            <div class="col-span-2"><label class="form-label">Qty</label></div>
-                            <div class="col-span-3"><label class="form-label">Unit Price</label></div>
+                            <div class="col-span-4"><label class="form-label">Description</label></div>
+                            <div class="col-span-3"><label class="form-label">Sales Type</label></div>
+                            <div class="col-span-1"><label class="form-label">Qty</label></div>
+                            <div class="col-span-2"><label class="form-label">Unit Price</label></div>
                             <div class="col-span-2"><label class="form-label">Total</label></div>
                         </div>
                         <!-- JS-generated item rows will be appended here --></div>
@@ -172,25 +190,36 @@
                 <!-- Section: Totals & Notes --><section class="grid grid-cols-1 sm:grid-cols-2 gap-8">
                     <!-- Notes --><div>
                         <label for="notes" class="form-label">Notes / Payment Instructions</label>
-                        <textarea id="notes" rows="4" class="form-input" placeholder="e.g. Please make payment to BDO Account..."></textarea>
+                        <textarea id="notes" rows="2" class="form-input" placeholder="e.g. Please make payment to BDO Account..."></textarea>
+                        
+                        <label for="received-amount" class="form-label mt-4">Received the amount of</label>
+                        <input type="text" id="received-amount" class="form-input" placeholder="e.g. One Hundred Pesos">
                     </div>
                     
                     <!-- Totals --><div class="space-y-3">
                         <div class="flex justify-between items-center">
-                            <span class="form-label">Subtotal</span>
-                            <span id="subtotal-display" class="font-semibold text-meryzeGreen-800">₱0.00</span>
+                            <span class="form-label">Total Sales (VAT Inclusive)</span>
+                            <span id="total-sales-display" class="font-semibold text-meryzeGreen-800">₱0.00</span>
                         </div>
                         <div class="flex justify-between items-center">
-                            <label for="tax-rate" class="form-label">Tax Rate (%)</label>
-                            <input type="number" id="tax-rate" class="form-input w-24 text-right" value="12" min="0">
+                            <span class="form-label">Less: VAT</span>
+                            <span id="vat-display" class="font-semibold text-meryzeGreen-800">₱0.00</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="form-label">Amount: Net of VAT</span>
+                            <span id="net-vat-display" class="font-semibold text-meryzeGreen-800">₱0.00</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <label for="discount-amount" class="form-label">Less: Discount</label>
+                            <input type="number" id="discount-amount" class="form-input w-28 text-right" value="0" min="0" step="0.01">
                         </div>
                          <div class="flex justify-between items-center">
-                            <span class="form-label">Tax Amount</span>
-                            <span id="tax-display" class="font-semibold text-meryzeGreen-800">₱0.00</span>
+                            <label for="withholding-tax-amount" class="form-label">Less: Withholding Tax</label>
+                            <input type="number" id="withholding-tax-amount" class="form-input w-28 text-right" value="0" min="0" step="0.01">
                         </div>
                         <hr class="my-2 border-gray-300">
                         <div class="flex justify-between items-center">
-                            <span class="text-lg font-bold text-meryzeGreen-900">Total</span>
+                            <span class="text-lg font-bold text-meryzeGreen-900">TOTAL AMOUNT DUE</span>
                             <span id="total-display" class="text-lg font-bold text-meryzeGreen-900">₱0.00</span>
                         </div>
                     </div>
@@ -206,13 +235,13 @@
                 </section>
             </form>
 
-            <!-- ====================================== --><!-- RIGHT COLUMN: INVOICE PREVIEW --><!-- ====================================== --><div class="bg-white rounded-lg shadow-xl print-no-shadow print-text-black border-4 border-meryzeGreen-900" id="invoice-print-area">
-                <div class="p-8 sm:p-12">
-                    <!-- Preview Header --><header id="invoice-preview-header" class="flex items-center gap-4 bg-meryzeYellow-300 -mx-8 -mt-8 px-6 py-4 rounded-t-md">
+            <!-- ====================================== --><!-- RIGHT COLUMN: INVOICE PREVIEW --><!-- ====================================== --><div class="bg-white rounded-lg shadow-xl print-no-shadow print-text-black" id="invoice-print-area">
+                <div class="p-4 sm:p-8 text-black print-text-black">
+                    <!-- Preview Header --><header id="invoice-preview-header" class="flex items-center justify-between gap-4 bg-meryzeYellow-300 -mx-8 -mt-8 px-6 py-4">
                         <div class="flex items-center gap-4">
-                            <!-- Company Logo --><img src="https://i.ibb.co/3k5f1Sj/Image-3.png" alt="Meryze Industrial Sales Co. Logo" class="w-12 h-12 object-contain">
+                            <!-- Company Logo --><img src="https://i.ibb.co/3k5f1Sj/Image-3.png" alt="Meryze Industrial Sales Co. Logo" class="w-16 h-16 object-contain">
                             <div>
-                                <h2 class="text-2xl font-bold text-meryzeGreen-900 uppercase">Meryze Industrial Sales Co.</h2>
+                                <h2 class="text-lg font-bold text-meryzeGreen-900 uppercase">Meryze Industrial Sales Co.</h2>
                                 <p id="preview-company-address" class="text-xs font-medium text-meryzeGreen-800 whitespace-pre-line">
                                     #34 VICTOR LIM ST. BF HOMES PARANAQUE CITY
                                 </p>
@@ -221,88 +250,131 @@
                                 </p>
                             </div>
                         </div>
+                        <h1 class="text-4xl font-bold text-meryzeGreen-900 uppercase">Invoice</h1>
                     </header>
 
-                    <!-- New Title & Invoice Details Section -->
-                    <div class="flex justify-between items-start mt-8">
-                        <div>
-                            <h1 class="text-4xl font-bold text-meryzeGreen-900 uppercase">Invoice</h1>
-                            
-                            <!-- Bill To (Moved under Invoice title) -->
-                            <div class="mt-8">
-                                <h3 class="text-sm font-semibold text-meryzeGreen-800 uppercase">Bill To</h3>
-                                <p id="preview-client-name" class="font-bold text-meryzeGreen-900 mt-1">
-                                    [Client Name]
-                                </p>
-                                <p id="preview-client-address" class="text-sm text-meryzeGreen-800 whitespace-pre-line mt-1">
-                                    [Client Address]
-                                </p>
-                                <p id="preview-client-email" class="text-sm text-meryzeGreen-800 mt-1">
-                                    [Client Email]
-                                </p>
+                    <!-- Invoice Meta -->
+                    <section class="flex justify-between items-start mt-4">
+                        <div class="text-sm">
+                            <div class="flex items-center gap-4">
+                                <div class="flex items-center gap-2">
+                                    <input id="preview-cash-sales" type="checkbox" class="h-4 w-4 bir-border" disabled>
+                                    <label for="preview-cash-sales">CASH SALES</label>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <input id="preview-charge-sales" type="checkbox" class="h-4 w-4 bir-border" disabled checked>
+                                    <label for="preview-charge-sales">CHARGE SALES</label>
+                                </div>
                             </div>
                         </div>
-
-                        <!-- Invoice Details (Moved to the right of Invoice title) -->
-                        <div class="sm:text-right">
-                            <div class="grid grid-cols-2 sm:grid-cols-1">
-                                <span class="text-sm font-semibold text-gray-500">Invoice #</span>
-                                <span id="preview-invoice-number" class="font-medium text-meryzeGreen-800 mb-2">[Invoice #]</span>
+                        <div class="text-right">
+                            <div class="flex items-center">
+                                <span class="text-sm font-bold text-red-600">Invoice No.</span>
+                                <span id="preview-invoice-number" class="font-medium text-red-600 mb-0 ml-2 bir-border px-4 py-1 min-w-[100px] text-center">[5000001]</span>
                             </div>
-                             <div class="grid grid-cols-2 sm:grid-cols-1">
-                                <span class="text-sm font-semibold text-gray-500">Date of Issue</span>
-                                <span id="preview-invoice-date" class="font-medium text-meryzeGreen-800 mb-2">[Date]</span>
-                            </div>
-                             <div class="grid grid-cols-2 sm:grid-cols-1">
-                                <span class="text-sm font-semibold text-gray-500">Due Date</span>
-                                <span id="preview-invoice-due-date" class="font-medium text-meryzeGreen-800 mb-2">[Due Date]</span>
+                             <div class="flex items-center mt-2">
+                                <span class="text-sm font-bold">Date:</span>
+                                <span id="preview-invoice-date" class="font-medium mb-0 ml-2 bir-border px-4 py-1 min-w-[100px] text-center">[Date]</span>
                             </div>
                         </div>
-                    </div>
+                    </section>
 
-                    <!-- Preview Items Table --><section class="mt-12">
-                        <table class="w-full text-left">
-                            <thead class="bg-meryzeYellow-50">
-                                <tr>
-                                    <th scope="col" class="py-3 px-4 text-xs font-semibold text-meryzeGreen-800 uppercase tracking-wider">Description</th>
-                                    <th scope="col" class="w-24 py-3 px-4 text-xs font-semibold text-meryzeGreen-800 uppercase tracking-wider text-right">Qty</th>
-                                    <th scope="col" class="w-32 py-3 px-4 text-xs font-semibold text-meryzeGreen-800 uppercase tracking-wider text-right">Unit Price</th>
-                                    <th scope="col" class="w-32 py-3 px-4 text-xs font-semibold text-meryzeGreen-900 uppercase tracking-wider text-right">Amount</th>
+                    <!-- Client Details -->
+                    <section class="mt-2 bir-border">
+                        <div class="p-2">
+                            <strong class="text-sm">SOLD TO:</strong>
+                            <div class="grid grid-cols-12 gap-x-2 mt-1">
+                                <label class="col-span-2 text-sm">Registered Name</label>
+                                <span class="col-span-10 text-sm font-medium" id="preview-client-name">: [Client Name]</span>
+                                
+                                <label class="col-span-2 text-sm">TIN</label>
+                                <span class="col-span-10 text-sm font-medium" id="preview-client-tin">: [Client TIN]</span>
+
+                                <label class="col-span-2 text-sm">Business Address</label>
+                                <span class="col-span-10 text-sm font-medium whitespace-pre-line" id="preview-client-address">: [Client Address]</span>
+                            </div>
+                        </div>
+                    </section>
+
+
+                    <!-- Preview Items Table --><section class="mt-0">
+                        <table class="w-full text-left bir-border">
+                            <thead class="bg-gray-200">
+                                <tr class="bir-border-b">
+                                    <th scope="col" class="py-2 px-2 text-xs font-bold uppercase tracking-wider bir-border-r text-center">Item Description / Nature of Service</th>
+                                    <th scope="col" class="w-24 py-2 px-2 text-xs font-bold uppercase tracking-wider bir-border-r text-center">Quantity</th>
+                                    <th scope="col" class="w-32 py-2 px-2 text-xs font-bold uppercase tracking-wider bir-border-r text-center">Unit Cost/Price</th>
+                                    <th scope="col" class="w-32 py-2 px-2 text-xs font-bold uppercase tracking-wider text-center">Amount</th>
                                 </tr>
                             </thead>
                             <tbody id="preview-items-tbody" class="divide-y divide-gray-200">
-                                <!-- JS-generated preview rows --><tr><td colspan="4" class="py-4 px-4 text-sm text-gray-500 text-center">[Add items to see them here]</td></tr>
+                                <!-- JS-generated preview rows -->
+                                <tr>
+                                    <td class="py-8 px-2 bir-border-r text-center text-sm text-gray-500" colspan="4">[Add items to see them here]</td>
+                                </tr>
+                                <!-- Dummy rows for spacing -->
+                                <tr><td class="py-3 px-2 bir-border-r">&nbsp;</td><td class="bir-border-r"></td><td class="bir-border-r"></td><td></td></tr>
+                                <tr><td class="py-3 px-2 bir-border-r">&nbsp;</td><td class="bir-border-r"></td><td class="bir-border-r"></td><td></td></tr>
+                                <tr><td class="py-3 px-2 bir-border-r">&nbsp;</td><td class="bir-border-r"></td><td class="bir-border-r"></td><td></td></tr>
                             </tbody>
                         </table>
                     </section>
 
-                    <!-- Preview Totals --><section class="mt-8 flex justify-end">
-                        <div class="w-full max-w-xs space-y-3">
-                            <div class="flex justify-between">
-                                <span class="text-sm font-medium text-meryzeGreen-800">Subtotal</span>
-                                <span id="preview-subtotal" class="text-sm font-medium text-meryzeGreen-900">₱0.00</span>
+                    <!-- Preview Totals & Footer -->
+                    <section class="mt-0 grid grid-cols-2">
+                        <!-- Left Summary -->
+                        <div class="bir-border-l bir-border-b bir-border-r p-2 text-sm">
+                            <div class="grid grid-cols-2 gap-x-2">
+                                <label>VATable Sales</label>
+                                <span id="preview-vatable-sales" class="bir-border px-2 text-right font-medium">₱0.00</span>
+                                <label>VAT</label>
+                                <span id="preview-vat-calc" class="bir-border px-2 text-right font-medium">₱0.00</span>
+                                <label>Zero-Rated Sales</label>
+                                <span id="preview-zero-rated-sales" class="bir-border px-2 text-right font-medium">₱0.00</span>
+                                <label>VAT-Exempt Sales</label>
+                                <span id="preview-vat-exempt-sales" class="bir-border px-2 text-right font-medium">₱0.00</span>
                             </div>
-                            <div class="flex justify-between">
-                                <span class="text-sm font-medium text-meryzeGreen-800">Tax (<span id="preview-tax-rate">12</span>%)</span>
-                                <span id="preview-tax" class="text-sm font-medium text-meryzeGreen-900">₱0.00</span>
+                            <div class="mt-4">
+                                <label>Received the amount of:</label>
+                                <p id="preview-received-amount" class="font-medium border-t border-black mt-2 pt-1">&nbsp;</p>
                             </div>
-                            <hr class="border-gray-300">
-                            <div class="flex justify-between">
-                                <span class="text-lg font-bold text-meryzeGreen-900">Total</span>
-                                <span id="preview-total" class="text-lg font-bold text-meryzeGreen-900">₱0.00</span>
+                            <p id="preview-notes" class="text-xs mt-2 whitespace-pre-line">[Notes]</p>
+                        </div>
+                        
+                        <!-- Right Summary -->
+                        <div class="bir-border-b bir-border-r text-sm">
+                            <div class="grid grid-cols-2">
+                                <label class="p-2 bir-border-b bir-border-r">Total Sales (VAT Inclusive)</label>
+                                <span id="preview-total-sales" class="p-2 bir-border-b text-right font-medium">₱0.00</span>
+                                <label class="p-2 bir-border-b bir-border-r">Less: VAT</label>
+                                <span id="preview-less-vat" class="p-2 bir-border-b text-right font-medium">₱0.00</span>
+                                <label class="p-2 bir-border-b bir-border-r">Amount: Net of VAT</label>
+                                <span id="preview-net-vat" class="p-2 bir-border-b text-right font-medium">₱0.00</span>
+                                <label class="p-2 bir-border-b bir-border-r">Less: Discount</label>
+                                <span id="preview-discount" class="p-2 bir-border-b text-right font-medium">₱0.00</span>
+                                <label class="p-2 bir-border-b bir-border-r">Add: VAT</label>
+                                <span class="p-2 bir-border-b text-right font-medium">₱0.00</span> <!-- Per BIR form, this is often 0 if VAT is already in total -->
+                                <label class="p-2 bir-border-b bir-border-r">Less: Withholding Tax</label>
+                                <span id="preview-withholding-tax" class="p-2 bir-border-b text-right font-medium">₱0.00</span>
+                                <label class="p-2 bir-border-b bir-border-r font-bold">TOTAL AMOUNT DUE</label>
+                                <span id="preview-total" class="p-2 bir-border-b text-right font-bold">₱0.00</span>
+                            </div>
+                            <div class="p-2">
+                                <p class="text-xs">SC/PWD/NAAC/MOV/Solo Parent ID No.:</p>
+                                <p class="text-xs mt-4 border-t border-black pt-1">SC/PWD/NAAC/MOV/Signature:</p>
                             </div>
                         </div>
                     </section>
                     
-                    <!-- Preview Notes --><section class="mt-12 pt-8 border-t border-gray-200">
-                        <h3 class="text-sm font-semibold text-meryzeGreen-800 uppercase">Notes</h3>
-                        <p id="preview-notes" class="text-sm text-meryzeGreen-800 mt-2 whitespace-pre-line">
-                            [Your notes and payment instructions will appear here]
-                        </p>
-                    </section>
-
-                    <!-- Preview Footer --><footer class="text-center text-xs text-gray-400 mt-12">
-                        Thank you for your business!
+                    <!-- Preview Footer --><footer class="text-xs text-gray-700 mt-1 grid grid-cols-2">
+                        <div>
+                            <p>PERMIT TO USE LOOSE LEAF NO.: [Your Permit No]</p>
+                            <p>DATE ISSUED: [Permit Date]</p>
+                        </div>
+                        <div class="text-right">
+                            <p>BIR AUTHORITY TO PRINT NO.: [Your BIR No]</p>
+                            <p>APPROVED SERIES: [Your Series]</p>
+                        </div>
                     </footer>
                 </div>
             </div>
@@ -337,13 +409,12 @@
             // Maps form input IDs to preview element IDs
             const fieldMap = {
                 'client-name': 'preview-client-name',
-                'client-email': 'preview-client-email',
+                'client-tin': 'preview-client-tin',
                 'client-address': 'preview-client-address',
                 'invoice-number': 'preview-invoice-number',
                 'invoice-date': 'preview-invoice-date',
-                'invoice-due-date': 'preview-invoice-due-date',
                 'notes': 'preview-notes',
-                'tax-rate': 'preview-tax-rate',
+                'received-amount': 'preview-received-amount',
             };
             
             // --- CURRENCY FORMATTER ---
@@ -370,41 +441,73 @@
                     }
                 }
                 
-                // 2. Calculate and update totals
+                // 2. Handle Checkboxes
+                document.getElementById('preview-cash-sales').checked = document.getElementById('cash-sales').checked;
+                document.getElementById('preview-charge-sales').checked = document.getElementById('charge-sales').checked;
+
+                // 3. Calculate and update totals
                 calculateTotals();
                 
-                // 3. Update line items in preview
+                // 4. Update line items in preview
                 updatePreviewItems();
             };
 
             // --- CALCULATE TOTALS ---
             const calculateTotals = () => {
-                let subtotal = 0;
+                let totalSales = 0;
+                let vatableSales = 0;
+                let zeroRatedSales = 0;
+                let vatExemptSales = 0;
+
                 const itemRows = lineItemsContainer.querySelectorAll('.item-row');
                 
                 itemRows.forEach(row => {
                     const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
                     const price = parseFloat(row.querySelector('.item-price').value) || 0;
+                    const salesType = row.querySelector('.item-sales-type').value;
                     const rowTotal = qty * price;
                     
                     // Update the "Total" input in the form row (disabled)
                     row.querySelector('.item-total').value = formatCurrency(rowTotal);
-                    subtotal += rowTotal;
+                    
+                    totalSales += rowTotal;
+
+                    if (salesType === 'vatable') {
+                        vatableSales += rowTotal;
+                    } else if (salesType === 'zero-rated') {
+                        zeroRatedSales += rowTotal;
+                    } else if (salesType === 'vat-exempt') {
+                        vatExemptSales += rowTotal;
+                    }
                 });
 
-                const taxRate = parseFloat(document.getElementById('tax-rate').value) || 0;
-                const taxAmount = subtotal * (taxRate / 100);
-                const total = subtotal + taxAmount;
+                // Calculations based on BIR form (assuming prices are VAT-inclusive)
+                const vatAmount = (vatableSales / 1.12) * 0.12;
+                const netOfVat = totalSales - vatAmount;
+                const discount = parseFloat(document.getElementById('discount-amount').value) || 0;
+                const withholdingTax = parseFloat(document.getElementById('withholding-tax-amount').value) || 0;
+                // Add VAT is 0.00 because total sales is already VAT inclusive
+                const totalAmountDue = netOfVat - discount - withholdingTax;
 
                 // Update form displays
-                document.getElementById('subtotal-display').textContent = formatCurrency(subtotal);
-                document.getElementById('tax-display').textContent = formatCurrency(taxAmount);
-                document.getElementById('total-display').textContent = formatCurrency(total);
+                document.getElementById('total-sales-display').textContent = formatCurrency(totalSales);
+                document.getElementById('vat-display').textContent = formatCurrency(vatAmount);
+                document.getElementById('net-vat-display').textContent = formatCurrency(netOfVat);
+                document.getElementById('total-display').textContent = formatCurrency(totalAmountDue);
                 
-                // Update preview displays
-                document.getElementById('preview-subtotal').textContent = formatCurrency(subtotal);
-                document.getElementById('preview-tax').textContent = formatCurrency(taxAmount);
-                document.getElementById('preview-total').textContent = formatCurrency(total);
+                // Update preview displays (Right Column)
+                document.getElementById('preview-total-sales').textContent = formatCurrency(totalSales);
+                document.getElementById('preview-less-vat').textContent = formatCurrency(vatAmount);
+                document.getElementById('preview-net-vat').textContent = formatCurrency(netOfVat);
+                document.getElementById('preview-discount').textContent = formatCurrency(discount);
+                document.getElementById('preview-withholding-tax').textContent = formatCurrency(withholdingTax);
+                document.getElementById('preview-total').textContent = formatCurrency(totalAmountDue);
+
+                // Update preview displays (Left Column)
+                document.getElementById('preview-vatable-sales').textContent = formatCurrency(vatableSales);
+                document.getElementById('preview-vat-calc').textContent = formatCurrency(vatAmount);
+                document.getElementById('preview-zero-rated-sales').textContent = formatCurrency(zeroRatedSales);
+                document.getElementById('preview-vat-exempt-sales').textContent = formatCurrency(vatExemptSales);
             };
             
             // --- UPDATE PREVIEW ITEMS TABLE ---
@@ -415,10 +518,14 @@
                 const itemRows = lineItemsContainer.querySelectorAll('.item-row');
                 
                 if (itemRows.length === 0) {
-                    previewTbody.innerHTML = '<tr><td colspan="4" class="py-4 px-4 text-sm text-gray-500 text-center">[Add items to see them here]</td></tr>';
+                    previewTbody.innerHTML = '<tr><td class="py-8 px-2 bir-border-r text-center text-sm text-gray-500" colspan="4">[Add items to see them here]</td></tr>' +
+                                             '<tr><td class="py-3 px-2 bir-border-r">&nbsp;</td><td class="bir-border-r"></td><td class="bir-border-r"></td><td></td></tr>' +
+                                             '<tr><td class="py-3 px-2 bir-border-r">&nbsp;</td><td class="bir-border-r"></td><td class="bir-border-r"></td><td></td></tr>' +
+                                             '<tr><td class="py-3 px-2 bir-border-r">&nbsp;</td><td class="bir-border-r"></td><td class="bir-border-r"></td><td></td></tr>';
                     return;
                 }
                 
+                let rowCount = 0;
                 itemRows.forEach(row => {
                     const description = row.querySelector('.item-desc').value || '[Item Description]';
                     const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
@@ -426,14 +533,33 @@
                     const total = qty * price;
                     
                     const tr = document.createElement('tr');
+                    tr.className = 'bir-border-b';
                     tr.innerHTML = `
-                        <td class="py-4 px-4 text-sm font-medium text-meryzeGreen-900">${description}</td>
-                        <td class="py-4 px-4 text-sm text-meryzeGreen-800 text-right">${qty}</td>
-                        <td class="py-4 px-4 text-sm text-meryzeGreen-800 text-right">${formatCurrency(price)}</td>
-                        <td class="py-4 px-4 text-sm font-medium text-meryzeGreen-900 text-right">${formatCurrency(total)}</td>
+                        <td class="py-2 px-2 text-sm font-medium text-black bir-border-r">${description}</td>
+                        <td class="py-2 px-2 text-sm text-black text-right bir-border-r">${qty}</td>
+                        <td class="py-2 px-2 text-sm text-black text-right bir-border-r">${formatCurrency(price)}</td>
+                        <td class="py-2 px-2 text-sm font-medium text-black text-right">${formatCurrency(total)}</td>
                     `;
                     previewTbody.appendChild(tr);
+                    rowCount++;
                 });
+
+                // Add empty rows to fill space
+                const minRows = 4;
+                for(let i = rowCount; i < minRows; i++) {
+                     const tr = document.createElement('tr');
+                     tr.innerHTML = `
+                        <td class="py-3 px-2 bir-border-r">&nbsp;</td>
+                        <td class="bir-border-r"></td>
+                        <td class="bir-border-r"></td>
+                        <td></td>
+                    `;
+                    // Add bottom border to all except last row
+                    if (i < minRows - 1) {
+                        tr.className = 'bir-border-b';
+                    }
+                    previewTbody.appendChild(tr);
+                }
             };
 
             // --- ADD ITEM ROW ---
@@ -441,16 +567,24 @@
                 const row = document.createElement('div');
                 row.className = 'item-row grid grid-cols-12 gap-x-4 gap-y-2 items-start';
                 row.innerHTML = `
-                    <!-- Description --><div class="col-span-12 sm:col-span-5">
+                    <!-- Description --><div class="col-span-12 sm:col-span-4">
                         <label class="form-label sm:hidden">Description</label>
                         <input type="text" class="form-input item-desc" placeholder="Item description">
                     </div>
-                    <!-- Qty --><div class="col-span-4 sm:col-span-2">
+                    <!-- Sales Type --><div class="col-span-12 sm:col-span-3">
+                        <label class="form-label sm:hidden">Sales Type</label>
+                        <select class="form-input item-sales-type">
+                            <option value="vatable">VATable</option>
+                            <option value="zero-rated">Zero-Rated</option>
+                            <option value="vat-exempt">VAT-Exempt</option>
+                        </select>
+                    </div>
+                    <!-- Qty --><div class="col-span-4 sm:col-span-1">
                         <label class="form-label sm:hidden">Qty</label>
                         <input type="number" class="form-input item-qty" placeholder="1" min="0" value="1">
                     </div>
-                    <!-- Unit Price --><div class="col-span-8 sm:col-span-3">
-                        <label class="form-label sm:hidden">Unit Price</label>
+                    <!-- Unit Price --><div class="col-span-8 sm:col-span-2">
+                        <label class="form-label sm:hidden">Unit Price (VAT-Inc)</label>
                         <div class="relative rounded-md shadow-sm">
                             <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                 <span class="text-gray-500 sm:text-sm">₱</span>
@@ -535,22 +669,32 @@
                 updatePreview();
 
                 // Add event listeners (ensure they are re-attached if body.innerHTML was reset)
-                form.removeEventListener('input', updatePreview); 
-                form.addEventListener('input', updatePreview);
+                if (form) {
+                    form.removeEventListener('input', updatePreview); 
+                    form.addEventListener('input', updatePreview);
+                }
 
-                branchSelect.removeEventListener('change', updateCompanyInfo);
-                branchSelect.addEventListener('change', updateCompanyInfo);
-                branchSelect.removeEventListener('change', updatePreview); // Also update overall preview when branch changes
-                branchSelect.addEventListener('change', updatePreview);
+                if (branchSelect) {
+                    branchSelect.removeEventListener('change', updateCompanyInfo);
+                    branchSelect.addEventListener('change', updateCompanyInfo);
+                    branchSelect.removeEventListener('change', updatePreview); // Also update overall preview when branch changes
+                    branchSelect.addEventListener('change', updatePreview);
+                }
 
-                addItemBtn.removeEventListener('click', addItemRow);
-                addItemBtn.addEventListener('click', addItemRow);
+                if (addItemBtn) {
+                    addItemBtn.removeEventListener('click', addItemRow);
+                    addItemBtn.addEventListener('click', addItemRow);
+                }
 
-                lineItemsContainer.removeEventListener('click', removeItemRow);
-                lineItemsContainer.addEventListener('click', removeItemRow);
+                if (lineItemsContainer) {
+                    lineItemsContainer.removeEventListener('click', removeItemRow);
+                    lineItemsContainer.addEventListener('click', removeItemRow);
+                }
 
-                printBtn.removeEventListener('click', handlePrint);
-                printBtn.addEventListener('click', handlePrint);
+                if (printBtn) {
+                    printBtn.removeEventListener('click', handlePrint);
+                    printBtn.addEventListener('click', handlePrint);
+                }
             };
 
             // Run initialize on load
@@ -559,6 +703,12 @@
     </script>
 </body>
 </html>
+
+
+
+
+
+
 
 
 
